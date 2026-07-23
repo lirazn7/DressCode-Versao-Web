@@ -1,75 +1,60 @@
-"use client"; // Diretiva do Next.js indicando que este é um Client Component
+"use client";
 
 import { useFeed } from "../presentation/hooks/useFeed";
+import { PostCard } from "../presentation/components/modules/PostCard";
 
 export default function VitrineScreen() {
-  // Consumimos nosso hook "limpo"
-  const { posts, isLoading, error } = useFeed();
+  const { posts, isLoading, error, refetch } = useFeed();
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8 tracking-wide">
-          VITRINE
-        </h1>
+    <main className="min-h-screen bg-[#0f0c1b] text-gray-100 p-4 md:p-8">
+      <div className="max-w-xl mx-auto space-y-6">
+        {/* Top Bar / Branding */}
+        <header className="flex items-center justify-between border-b border-[#2a2447] pb-4 mb-6">
+          <h1 className="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-indigo-400 to-pink-500">
+            DRESSCODE
+          </h1>
+          <span className="text-[10px] uppercase tracking-widest text-purple-300 font-bold bg-purple-950/80 px-3 py-1 rounded-full border border-purple-700/50">
+            Vitrine
+          </span>
+        </header>
 
+        {/* Estado de Carregamento (Loading State) */}
         {isLoading && (
-          <div className="text-center text-gray-500 animate-pulse">
-            Carregando looks...
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs text-gray-400 animate-pulse font-medium">
+              Carregando os melhores looks...
+            </p>
           </div>
         )}
 
-        {error && (
-          <div className="bg-red-100 text-red-700 p-4 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-6">
-          {!isLoading && posts.length === 0 && !error && (
-            <p className="text-center text-gray-500">Nenhum post encontrado.</p>
-          )}
-
-          {posts.map((post) => (
-            <article 
-              key={post.id} 
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+        {/* Estado de Erro (Error State) */}
+        {error && !isLoading && (
+          <div className="bg-red-950/40 border border-red-800/50 text-red-200 p-6 rounded-2xl text-center space-y-3 backdrop-blur-sm">
+            <p className="text-sm font-medium">{error}</p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 bg-red-800 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md active:scale-95"
             >
-              {/* Header do Post */}
-              <div className="flex items-center gap-3 p-4">
-                <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
-                  {post.authorUsername.charAt(0).toUpperCase()}
-                </div>
-                <span className="font-semibold text-sm">@{post.authorUsername}</span>
-              </div>
+              Tentar Novamente
+            </button>
+          </div>
+        )}
 
-              {/* Imagem do Post */}
-              <div className="aspect-[4/5] bg-gray-200 relative">
-                <img 
-                  src={post.imageUrl} 
-                  alt={post.description}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+        {/* Estado Vazio (Empty State) */}
+        {!isLoading && !error && posts.length === 0 && (
+          <div className="text-center py-20 bg-[#18142a] rounded-2xl border border-[#2a2447] p-8">
+            <p className="text-gray-400 text-sm">
+              Nenhum look publicado na vitrine ainda.
+            </p>
+          </div>
+        )}
 
-              {/* Footer do Post (Ações) */}
-              <div className="p-4">
-                <div className="flex gap-4 mb-3">
-                  <button className="flex items-center gap-1 text-gray-600 hover:text-purple-600 transition-colors">
-                    <span className="font-medium">{post.likesCount}</span> Curtidas
-                  </button>
-                  <button className="flex items-center gap-1 text-gray-600 hover:text-purple-600 transition-colors">
-                    <span className="font-medium">{post.commentsCount}</span> Comentários
-                  </button>
-                </div>
-                <p className="text-sm">
-                  <span className="font-semibold mr-2">@{post.authorUsername}</span>
-                  {post.description}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
+        {/* Feed de Posts Desacoplado via PostCard Organism */}
+        {!isLoading &&
+          !error &&
+          posts.map((post) => <PostCard key={post.id} post={post} />)}
       </div>
     </main>
   );
