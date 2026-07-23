@@ -8,20 +8,24 @@ export function useFeed() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
+    // Garante que só executaremos a chamada no navegador (Client-side)
+    if (typeof window === "undefined") return;
+
     setIsLoading(true);
     setError(null);
+    
     try {
-      // O Hook não sabe que é Firebase. Ele só chama o Use Case!
+      console.log("🚀 [useFeed] Solicitando posts da Vitrine via UseCase...");
       const data = await getFeedPostsUseCase.execute(20);
       setPosts(data);
     } catch (err: any) {
-      setError(err.message || "Erro ao carregar a vitrine.");
+      console.error("💥 [useFeed] Falha ao carregar feed:", err);
+      setError(err.message || "Não foi possível carregar a vitrine.");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Busca os posts assim que o componente for montado
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
