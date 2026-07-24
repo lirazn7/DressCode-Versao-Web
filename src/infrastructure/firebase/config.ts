@@ -1,9 +1,8 @@
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
-import { getAuth, Auth } from "firebase/auth";
-import { getStorage, FirebaseStorage } from "firebase/storage";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // 👈 Adicione a importação do Storage
 
-// As variáveis de ambiente devem ser criadas em um arquivo .env.local na raiz do projeto
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -13,9 +12,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Evita a inicialização duplicada do app no ambiente de desenvolvimento do Next.js (Hot Reload)
-const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-export const db: Firestore = getFirestore(app);
-export const auth: Auth = getAuth(app);
-export const storage: FirebaseStorage = getStorage(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app); // 👈 Exportação do serviço de Storage

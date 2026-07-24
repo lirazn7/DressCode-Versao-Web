@@ -1,46 +1,99 @@
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../firebase/config";
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs 
+} from "firebase/firestore";
+import { db } from "@/infrastructure/firebase/config";
 import { IUserRepository } from "@/domain/repositories/IUserRepository";
 import { UserProfile } from "@/domain/entities/UserProfile";
 
 export class FirebaseUserRepository implements IUserRepository {
+  /**
+   * Busca o perfil do usuário pelo seu ID único de documento no Firestore.
+   * Aplica o padrão Self-Healing/Lazy Initialization se o documento não existir.
+   */
   async getUserProfileById(userId: string): Promise<UserProfile | null> {
-    try {
-      const userDocRef = doc(db, "users", userId);
-      const userSnapshot = await getDoc(userDocRef);
+    const userRef = doc(db, "users", userId);
+    const docSnap = await getDoc(userRef);
 
-      if (!userSnapshot.exists()) return null;
-
-      const data = userSnapshot.data();
-
-      // Contagem de posts do usuário
-      const postsQuery = query(collection(db, "posts"), where("userid", "==", userId));
-      const postsSnapshot = await getDocs(postsQuery);
-
-      return {
+    // Se o perfil ainda não existir no Firestore, cria um registro padrão de imediato
+    if (!docSnap.exists()) {
+      const defaultProfile: UserProfile = {
         id: userId,
-        email: data.email || "",
-        username: data.username || data.authorUsername || "usuario",
-        displayName: data.displayName || data.username || "Usuário DressCode",
-        profilePicture: data.profilePicture || data.userPhoto || "",
-        bio: data.bio || "Apaixonado por moda e estilo urbano.",
-        postsCount: postsSnapshot.size,
-        followersCount: data.followersCount || data.followers?.length || 0,
-        followingCount: data.followingCount || data.following?.length || 0,
-        createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+        email: "",
+        username: "usuario",
+        displayName: "Usuário DressCode",
+        bio: "",
+        profilePicture: "",
+        postsCount: 0,
+        followersCount: 0,
+        followingCount: 0,
+        createdAt: new Date(),
       };
-    } catch (error) {
-      console.error("💥 [FirebaseUserRepository] Erro ao buscar perfil:", error);
-      throw error;
+
+      await setDoc(userRef, {
+        ...defaultProfile,
+        createdAt: new Date().toISOString(),
+      });
+
+      return defaultProfile;
     }
+
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      email: data.email || "",
+      username: data.username || "usuario",
+      displayName: data.displayName || data.username || "Usuário",
+      bio: data.bio || "",
+      profilePicture: data.profilePicture || "",
+      postsCount: data.postsCount || 0,
+      followersCount: data.followersCount || 0,
+      followingCount: data.followingCount || 0,
+      createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    };
   }
 
+  /**
+   * Busca o perfil do usuário pelo nome de usuário (@username).
+   * Satisfaz o contrato da interface IUserRepository.
+   */
   async getUserProfileByUsername(username: string): Promise<UserProfile | null> {
-    throw new Error("Método não implementado.");
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", username));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const docSnap = querySnapshot.docs[0];
+    const data = docSnap.data();
+
+    return {
+      id: docSnap.id,
+      email: data.email || "",
+      username: data.username || username,
+      displayName: data.displayName || data.username || "Usuário",
+      bio: data.bio || "",
+      profilePicture: data.profilePicture || "",
+      postsCount: data.postsCount || 0,
+      followersCount: data.followersCount || 0,
+      followingCount: data.followingCount || 0,
+      createdAt: data.createdAt ? new Date(data.createdAt) : new Date(),
+    };
   }
 
+  /**
+   * Atualiza os campos de perfil do usuário no Firestore.
+   */
   async updateProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
-    const userDocRef = doc(db, "users", userId);
-    await updateDoc(userDocRef, data);
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, data);
   }
 }

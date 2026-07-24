@@ -12,8 +12,9 @@ import { SegmentedTabs } from "@/presentation/components/ui/SegmentedTabs";
 import { AddClosetItemModal } from "@/presentation/components/modules/AddClosetItemModal";
 import { EditProfileModal } from "@/presentation/components/modules/EditProfileModal";
 import { ClosetCategory, CreateClosetItemDTO } from "@/domain/entities/ClosetItem";
-import { UpdateUserProfileDTO } from "@/domain/entities/UserProfile";
 
+// 👇 Garanta que UserProfile esteja sendo importado aqui!
+import { UserProfile, UpdateUserProfileDTO } from "@/domain/entities/UserProfile";
 type ProfileTab = "looks" | "closet";
 
 export default function ProfilePage() {
@@ -25,7 +26,7 @@ export default function ProfilePage() {
   const [isClosetModalOpen, setIsClosetModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
-  const { profile, userPosts, isLoading: profileLoading, updateProfile } = useProfile(user?.id);
+  const { profile, userPosts, isLoading: profileLoading, updateProfile } = useProfile(user?.id, user);
   const { items: closetItems, isLoading: closetLoading, addItem } = useCloset(user?.id, selectedCategory);
 
   if (authLoading || profileLoading) {
@@ -55,6 +56,20 @@ export default function ProfilePage() {
     );
   }
 
+  // Objeto de perfil ativo garantido sem quebra de UI
+  const activeProfile: UserProfile = profile || {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    displayName: user.displayName || user.username,
+    bio: "", // Fallback padrão, pois a entidade base 'User' não possui o campo 'bio'
+    profilePicture: user.profilePicture || "",
+    postsCount: 0,
+    followersCount: 0,
+    followingCount: 0,
+    createdAt: new Date(),
+  };
+
   const handleLogout = async () => {
     await logout();
     router.push("/login");
@@ -71,15 +86,13 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-[#0f0c1b] text-gray-100 p-4 md:p-8">
       <div className="max-w-xl mx-auto space-y-6">
-        {/* Header do Perfil */}
-        {profile && (
-          <ProfileHeader
-            profile={profile}
-            isOwner={true}
-            onEditProfile={() => setIsEditProfileModalOpen(true)}
-            onLogout={handleLogout}
-          />
-        )}
+        {/* Cabeçalho do Perfil (Garantido) */}
+        <ProfileHeader
+          profile={activeProfile}
+          isOwner={true}
+          onEditProfile={() => setIsEditProfileModalOpen(true)}
+          onLogout={handleLogout}
+        />
 
         {/* Alternador de Abas */}
         <SegmentedTabs<ProfileTab>
@@ -145,7 +158,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Modal de Cadastro de Peças */}
+      {/* Modal de Cadastro de Peças no Closet */}
       <AddClosetItemModal
         isOpen={isClosetModalOpen}
         onClose={() => setIsClosetModalOpen(false)}
@@ -153,14 +166,12 @@ export default function ProfilePage() {
       />
 
       {/* Modal de Edição de Perfil */}
-      {profile && (
-        <EditProfileModal
-          isOpen={isEditProfileModalOpen}
-          profile={profile}
-          onClose={() => setIsEditProfileModalOpen(false)}
-          onSubmit={handleUpdateProfile}
-        />
-      )}
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        profile={activeProfile}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        onSubmit={handleUpdateProfile}
+      />
     </main>
   );
 }

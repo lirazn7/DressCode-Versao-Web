@@ -5,7 +5,7 @@ import { UserProfile, UpdateUserProfileDTO } from "@/domain/entities/UserProfile
 import { Post } from "@/domain/entities/Post";
 import { getUserProfileUseCase, updateUserProfileUseCase, postRepository } from "@/presentation/di/Registry";
 
-export const useProfile = (userId: string | undefined) => {
+export const useProfile = (userId: string | undefined, authUser?: any) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -26,14 +26,31 @@ export const useProfile = (userId: string | undefined) => {
         postRepository.getPostsByUserId(userId),
       ]);
 
-      setProfile(fetchedProfile);
-      setUserPosts(posts);
+      if (fetchedProfile) {
+        setProfile(fetchedProfile);
+      } else if (authUser) {
+        // Fallback imediato com os dados de sessão do AuthContext
+        setProfile({
+          id: authUser.id,
+          email: authUser.email,
+          username: authUser.username,
+          displayName: authUser.displayName || authUser.username,
+          bio: authUser.bio || "",
+          profilePicture: authUser.profilePicture || "",
+          postsCount: 0,
+          followersCount: 0,
+          followingCount: 0,
+          createdAt: new Date(),
+        });
+      }
+
+      setUserPosts(posts || []);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar dados do perfil.");
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, authUser]);
 
   useEffect(() => {
     fetchProfileData();
@@ -47,7 +64,7 @@ export const useProfile = (userId: string | undefined) => {
       ...data,
     });
 
-    // Atualiza o estado local reativamente
+    // Atualização reativa em tempo real na UI
     setProfile((prev) => (prev ? { ...prev, ...data } : null));
   };
 
