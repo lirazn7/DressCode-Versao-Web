@@ -1,16 +1,23 @@
- import { User } from "./User";
-
 export interface Post {
   id: string;
-  authorId: string;
+  userId: string;
+  authorName: string;
   authorUsername: string;
-  authorProfilePicture?: string;
+  authorPicture?: string;
   imageUrl: string;
-  description: string;
+  caption: string;
+  closetItemIds?: string[]; // IDs das peças do closet vinculadas ao look
   likesCount: number;
   commentsCount: number;
   createdAt: Date;
 }
 
-// Um tipo utilitário para quando formos criar um post (o ID e os contadores são gerados depois)
-export type CreatePostDTO = Omit<Post, 'id' | 'likesCount' | 'commentsCount' | 'createdAt'>;
+export type CreatePostDTO = {
+  userId: string;
+  authorName: string;
+  authorUsername: string;
+  authorPicture?: string;
+  imageUrl: string;
+  caption: string;
+  closetItemIds?: string[];
+};

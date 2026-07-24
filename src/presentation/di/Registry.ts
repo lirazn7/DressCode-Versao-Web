@@ -16,16 +16,16 @@ import { AddClosetItemUseCase } from "@/application/useCases/AddClosetItemUseCas
 import { UpdateUserProfileUseCase } from "@/application/useCases/UpdateUserProfileUseCase";
 import { UploadProfilePictureUseCase } from "@/application/useCases/UploadProfilePictureUseCase";
 
-// Instâncias de Infraestrutura
+// Instâncias de Infraestrutura (Adaptadores Concretos)
 export const postRepository = new FirebasePostRepository();
 export const authRepository = new FirebaseAuthRepository();
 export const userRepository = new FirebaseUserRepository();
 export const closetRepository = new FirebaseClosetRepository();
 export const storageRepository = new FirebaseStorageRepository();
 
-// Injeção de Dependência nos Use Cases
+// Injeção de Dependência nos Casos de Uso (Use Cases)
 export const getFeedPostsUseCase = new GetFeedPostsUseCase(postRepository);
-export const createPostUseCase = new CreatePostUseCase(postRepository);
+export const createPostUseCase = new CreatePostUseCase(postRepository, userRepository);
 
 export const loginWithEmailUseCase = new LoginWithEmailUseCase(authRepository);
 export const loginWithGoogleUseCase = new LoginWithGoogleUseCase(authRepository);

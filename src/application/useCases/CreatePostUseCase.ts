@@ -1,20 +1,45 @@
-import { Post, CreatePostDTO } from "../../domain/entities/Post";
-import { IPostRepository } from "../../domain/repositories/IPostRepository";
+import { IPostRepository } from "@/domain/repositories/IPostRepository";
+import { IUserRepository } from "@/domain/repositories/IUserRepository";
+import { CreatePostDTO, Post } from "@/domain/entities/Post";
 
 export class CreatePostUseCase {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    private readonly postRepository: IPostRepository,
+    private readonly userRepository: IUserRepository
+  ) {}
 
-  async execute(postData: CreatePostDTO): Promise<Post> {
-    // A Camada de Aplicação é o lugar perfeito para validações de negócio
-    if (!postData.imageUrl || postData.imageUrl.trim() === "") {
-      throw new Error("Um post precisa obrigatoriamente de uma imagem.");
+  async execute(dto: CreatePostDTO): Promise<Post> {
+    if (!dto.userId) {
+      throw new Error("ID do usuário é obrigatório para publicar um look.");
     }
 
-    if (!postData.authorId) {
-      throw new Error("Usuário não autenticado.");
+    if (!dto.imageUrl || dto.imageUrl.trim() === "") {
+      throw new Error("É necessário incluir uma foto para publicar um look.");
     }
 
-    // Se as regras de negócio passarem, delegamos a persistência para a ''infraestrutura
-    return await this.postRepository.createPost(postData);
+    if (dto.caption && dto.caption.length > 500) {
+      throw new Error("A legenda deve ter no máximo 500 caracteres.");
+    }
+
+    // 1. Cria a publicação no repositório de posts
+    const newPost = await this.postRepository.createPost({
+      ...dto,
+      caption: dto.caption.trim(),
+      closetItemIds: dto.closetItemIds || [],
+    });
+
+    // 2. Incrementa o contador de posts do usuário
+    try {
+      const userProfile = await this.userRepository.getUserProfileById(dto.userId);
+      if (userProfile) {
+        await this.userRepository.updateProfile(dto.userId, {
+          postsCount: (userProfile.postsCount || 0) + 1,
+        });
+      }
+    } catch (error) {
+      console.warn("Não foi possível atualizar o contador de posts do perfil:", error);
+    }
+
+    return newPost;
   }
 }

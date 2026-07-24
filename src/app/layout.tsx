@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/presentation/contexts/AuthContext";
 import { ModalProvider } from "@/presentation/contexts/ModalContext";
-import { Navbar } from "@/presentation/components/modules/NavBar"; // 👈 Corrigido para 'Navbar'
+import { TopHeader } from "@/presentation/components/modules/TopHeader";
 import { BottomNav } from "@/presentation/components/modules/BottomNav";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,15 +23,15 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#0f0c1b] text-gray-100 min-h-screen flex flex-col`}>
         <AuthProvider>
           <ModalProvider>
-            {/* Top Navigation */}
-            <Navbar />
+            {/* Top Brand Header */}
+            <TopHeader />
 
             {/* Conteúdo Principal com compensação inferior para o BottomNav */}
             <div className="flex-1 pb-24">
               {children}
             </div>
 
-            {/* Bottom Floating Navigation Dock */}
+            {/* Central de Navegação do Rodapé */}
             <BottomNav />
           </ModalProvider>
         </AuthProvider>
