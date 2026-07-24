@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Pencil, LogOut } from "lucide-react";
 import { UserProfile } from "@/domain/entities/UserProfile";
 import { Avatar } from "@/presentation/components/ui/Avatar";
 
@@ -43,18 +44,19 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 {onEditProfile && (
                   <button
                     onClick={onEditProfile}
-                    className="px-3.5 py-2 bg-[#241c3f] hover:bg-[#2d234f] border border-[#3b3260] text-gray-200 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95"
+                    className="px-3.5 py-2 bg-[#241c3f] hover:bg-[#2d234f] border border-[#3b3260] text-gray-200 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-1.5"
                   >
-                    ✏️ Editar Perfil
+                    <Pencil className="w-3.5 h-3.5 text-purple-300" />
+                    <span>Editar Perfil</span>
                   </button>
                 )}
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95"
+                    className="p-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center"
                     title="Sair da conta"
                   >
-                    Sair
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

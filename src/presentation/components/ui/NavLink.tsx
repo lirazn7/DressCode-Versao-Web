@@ -23,7 +23,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, children, icon }) => {
           : "text-gray-400 hover:text-white hover:bg-white/5"
       }`}
     >
-      {icon && <span className="text-sm">{icon}</span>}
+      {icon && <span className="flex items-center">{icon}</span>}
       <span>{children}</span>
     </Link>
   );
