@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Home, User, LogOut } from "lucide-react";
 import { useAuth } from "@/presentation/hooks/useAuth";
 import { NavLink } from "@/presentation/components/ui/NavLink";
 import { Avatar } from "@/presentation/components/ui/Avatar";
@@ -29,11 +30,11 @@ export const Navbar: React.FC = () => {
 
         {/* Links de Navegação Principal */}
         <nav className="flex items-center gap-1 sm:gap-2">
-          <NavLink href="/" icon="🏠">
+          <NavLink href="/" icon={<Home className="w-4 h-4" />}>
             Feed
           </NavLink>
           {user && (
-            <NavLink href="/profile" icon="👤">
+            <NavLink href="/profile" icon={<User className="w-4 h-4" />}>
               Meu Closet
             </NavLink>
           )}
@@ -60,10 +61,10 @@ export const Navbar: React.FC = () => {
               </Link>
               <button
                 onClick={handleLogout}
-                className="p-2 text-xs font-bold text-gray-400 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5"
+                className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-xl hover:bg-white/5 flex items-center justify-center"
                 title="Sair da conta"
               >
-                🚪
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
