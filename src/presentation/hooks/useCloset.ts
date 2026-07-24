@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ClosetItem, ClosetCategory } from "@/domain/entities/ClosetItem";
-import { getClosetItemsUseCase } from "@/presentation/di/Registry";
+import { ClosetItem, ClosetCategory, CreateClosetItemDTO } from "@/domain/entities/ClosetItem";
+import { getClosetItemsUseCase, addClosetItemUseCase } from "@/presentation/di/Registry";
 
 export const useCloset = (userId: string | undefined, initialCategory?: ClosetCategory) => {
   const [items, setItems] = useState<ClosetItem[]>([]);
@@ -33,12 +33,26 @@ export const useCloset = (userId: string | undefined, initialCategory?: ClosetCa
     fetchCloset();
   }, [fetchCloset]);
 
+  const addItem = async (itemData: Omit<CreateClosetItemDTO, "userId">) => {
+    if (!userId) throw new Error("Usuário não autenticado.");
+
+    const newItem = await addClosetItemUseCase.execute({
+      ...itemData,
+      userId,
+    });
+
+    // Atualização reativa do estado local
+    setItems((prev) => [newItem, ...prev]);
+    return newItem;
+  };
+
   return {
     items,
     selectedCategory,
     setSelectedCategory,
     isLoading,
     error,
+    addItem,
     refetchCloset: fetchCloset,
   };
 };

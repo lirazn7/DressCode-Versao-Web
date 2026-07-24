@@ -9,7 +9,8 @@ import { ProfileHeader } from "@/presentation/components/modules/ProfileHeader";
 import { ClosetGrid } from "@/presentation/components/modules/ClosetGrid";
 import { PostCard } from "@/presentation/components/modules/PostCard";
 import { SegmentedTabs } from "@/presentation/components/ui/SegmentedTabs";
-import { ClosetCategory } from "@/domain/entities/ClosetItem";
+import { AddClosetItemModal } from "@/presentation/components/modules/AddClosetItemModal";
+import { ClosetCategory, CreateClosetItemDTO } from "@/domain/entities/ClosetItem";
 
 type ProfileTab = "looks" | "closet";
 
@@ -19,9 +20,10 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<ProfileTab>("looks");
   const [selectedCategory, setSelectedCategory] = useState<ClosetCategory | undefined>(undefined);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { profile, userPosts, isLoading: profileLoading } = useProfile(user?.id);
-  const { items: closetItems, isLoading: closetLoading } = useCloset(user?.id, selectedCategory);
+  const { items: closetItems, isLoading: closetLoading, addItem } = useCloset(user?.id, selectedCategory);
 
   if (authLoading || profileLoading) {
     return (
@@ -53,6 +55,10 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await logout();
     router.push("/login");
+  };
+
+  const handleAddClosetItem = async (itemData: Omit<CreateClosetItemDTO, "userId">) => {
+    await addItem(itemData);
   };
 
   return (
@@ -93,6 +99,20 @@ export default function ProfilePage() {
         {/* Conteúdo da Aba 2: Meu Closet */}
         {activeTab === "closet" && (
           <div className="space-y-4">
+            {/* Cabeçalho da Seção de Closet com Filtro e Botão de Adicionar */}
+            <div className="flex items-center justify-between gap-3 bg-[#18142a] p-4 rounded-2xl border border-[#2a2447]">
+              <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                Filtros do Guarda-Roupa
+              </span>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-1.5"
+              >
+                <span>+</span>
+                <span>Nova Peça</span>
+              </button>
+            </div>
+
             {/* Filtros de Categoria */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               {(["all", "tops", "bottoms", "shoes", "jackets", "accessories"] as const).map((cat) => {
@@ -119,6 +139,13 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Cadastro de Peças */}
+      <AddClosetItemModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddClosetItem}
+      />
     </main>
   );
 }

@@ -11,8 +11,9 @@ import { RegisterWithEmailUseCase } from "@/application/useCases/RegisterWithEma
 import { LogoutUseCase } from "@/application/useCases/LogoutUseCase";
 import { GetUserProfileUseCase } from "@/application/useCases/GetUserProfileUseCase";
 import { GetClosetItemsUseCase } from "@/application/useCases/GetClosetItemsUseCase";
+import { AddClosetItemUseCase } from "@/application/useCases/AddClosetItemUseCase";
 
-// Instâncias de Infraestrutura (Adapters)
+// Instâncias de Infraestrutura
 export const postRepository = new FirebasePostRepository();
 export const authRepository = new FirebaseAuthRepository();
 export const userRepository = new FirebaseUserRepository();
@@ -29,3 +30,4 @@ export const logoutUseCase = new LogoutUseCase(authRepository);
 
 export const getUserProfileUseCase = new GetUserProfileUseCase(userRepository);
 export const getClosetItemsUseCase = new GetClosetItemsUseCase(closetRepository);
+export const addClosetItemUseCase = new AddClosetItemUseCase(closetRepository);
