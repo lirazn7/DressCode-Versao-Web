@@ -12,6 +12,7 @@ import { LogoutUseCase } from "@/application/useCases/LogoutUseCase";
 import { GetUserProfileUseCase } from "@/application/useCases/GetUserProfileUseCase";
 import { GetClosetItemsUseCase } from "@/application/useCases/GetClosetItemsUseCase";
 import { AddClosetItemUseCase } from "@/application/useCases/AddClosetItemUseCase";
+import { UpdateUserProfileUseCase } from "@/application/useCases/UpdateUserProfileUseCase";
 
 // Instâncias de Infraestrutura
 export const postRepository = new FirebasePostRepository();
@@ -29,5 +30,6 @@ export const registerWithEmailUseCase = new RegisterWithEmailUseCase(authReposit
 export const logoutUseCase = new LogoutUseCase(authRepository);
 
 export const getUserProfileUseCase = new GetUserProfileUseCase(userRepository);
+export const updateUserProfileUseCase = new UpdateUserProfileUseCase(userRepository);
 export const getClosetItemsUseCase = new GetClosetItemsUseCase(closetRepository);
 export const addClosetItemUseCase = new AddClosetItemUseCase(closetRepository);

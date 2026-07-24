@@ -7,12 +7,14 @@ import { Avatar } from "@/presentation/components/ui/Avatar";
 interface ProfileHeaderProps {
   profile: UserProfile;
   isOwner?: boolean;
+  onEditProfile?: () => void;
   onLogout?: () => void;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   profile,
   isOwner = false,
+  onEditProfile,
   onLogout,
 }) => {
   return (
@@ -36,13 +38,26 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </p>
             </div>
 
-            {isOwner && onLogout && (
-              <button
-                onClick={onLogout}
-                className="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 self-center sm:self-auto"
-              >
-                Sair da Conta
-              </button>
+            {isOwner && (
+              <div className="flex items-center gap-2 self-center sm:self-auto">
+                {onEditProfile && (
+                  <button
+                    onClick={onEditProfile}
+                    className="px-3.5 py-2 bg-[#241c3f] hover:bg-[#2d234f] border border-[#3b3260] text-gray-200 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95"
+                  >
+                    ✏️ Editar Perfil
+                  </button>
+                )}
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/50 text-red-300 text-xs font-bold rounded-xl transition-all shadow-md active:scale-95"
+                    title="Sair da conta"
+                  >
+                    Sair
+                  </button>
+                )}
+              </div>
             )}
           </div>
 

@@ -6,3 +6,10 @@ export interface UserProfile extends User {
   followersCount: number;
   followingCount: number;
 }
+
+export type UpdateUserProfileDTO = {
+  userId: string;
+  displayName?: string;
+  bio?: string;
+  profilePicture?: string;
+};

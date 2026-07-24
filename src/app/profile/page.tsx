@@ -10,7 +10,9 @@ import { ClosetGrid } from "@/presentation/components/modules/ClosetGrid";
 import { PostCard } from "@/presentation/components/modules/PostCard";
 import { SegmentedTabs } from "@/presentation/components/ui/SegmentedTabs";
 import { AddClosetItemModal } from "@/presentation/components/modules/AddClosetItemModal";
+import { EditProfileModal } from "@/presentation/components/modules/EditProfileModal";
 import { ClosetCategory, CreateClosetItemDTO } from "@/domain/entities/ClosetItem";
+import { UpdateUserProfileDTO } from "@/domain/entities/UserProfile";
 
 type ProfileTab = "looks" | "closet";
 
@@ -20,9 +22,10 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<ProfileTab>("looks");
   const [selectedCategory, setSelectedCategory] = useState<ClosetCategory | undefined>(undefined);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClosetModalOpen, setIsClosetModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
-  const { profile, userPosts, isLoading: profileLoading } = useProfile(user?.id);
+  const { profile, userPosts, isLoading: profileLoading, updateProfile } = useProfile(user?.id);
   const { items: closetItems, isLoading: closetLoading, addItem } = useCloset(user?.id, selectedCategory);
 
   if (authLoading || profileLoading) {
@@ -61,6 +64,10 @@ export default function ProfilePage() {
     await addItem(itemData);
   };
 
+  const handleUpdateProfile = async (data: Omit<UpdateUserProfileDTO, "userId">) => {
+    await updateProfile(data);
+  };
+
   return (
     <main className="min-h-screen bg-[#0f0c1b] text-gray-100 p-4 md:p-8">
       <div className="max-w-xl mx-auto space-y-6">
@@ -69,11 +76,12 @@ export default function ProfilePage() {
           <ProfileHeader
             profile={profile}
             isOwner={true}
+            onEditProfile={() => setIsEditProfileModalOpen(true)}
             onLogout={handleLogout}
           />
         )}
 
-        {/* Alternador de Abas principais (Looks vs Closet) */}
+        {/* Alternador de Abas */}
         <SegmentedTabs<ProfileTab>
           options={[
             { id: "looks", label: "Looks Publicados", badgeCount: userPosts.length },
@@ -83,7 +91,7 @@ export default function ProfilePage() {
           onChange={(tab) => setActiveTab(tab)}
         />
 
-        {/* Conteúdo da Aba 1: Looks Publicados */}
+        {/* Aba 1: Looks Publicados */}
         {activeTab === "looks" && (
           <div className="space-y-4">
             {userPosts.length === 0 ? (
@@ -96,16 +104,15 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Conteúdo da Aba 2: Meu Closet */}
+        {/* Aba 2: Meu Closet */}
         {activeTab === "closet" && (
           <div className="space-y-4">
-            {/* Cabeçalho da Seção de Closet com Filtro e Botão de Adicionar */}
             <div className="flex items-center justify-between gap-3 bg-[#18142a] p-4 rounded-2xl border border-[#2a2447]">
               <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
                 Filtros do Guarda-Roupa
               </span>
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setIsClosetModalOpen(true)}
                 className="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-1.5"
               >
                 <span>+</span>
@@ -113,7 +120,6 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {/* Filtros de Categoria */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               {(["all", "tops", "bottoms", "shoes", "jackets", "accessories"] as const).map((cat) => {
                 const isCatActive =
@@ -134,7 +140,6 @@ export default function ProfilePage() {
               })}
             </div>
 
-            {/* Grade de Itens do Closet */}
             <ClosetGrid items={closetItems} isLoading={closetLoading} />
           </div>
         )}
@@ -142,10 +147,20 @@ export default function ProfilePage() {
 
       {/* Modal de Cadastro de Peças */}
       <AddClosetItemModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isClosetModalOpen}
+        onClose={() => setIsClosetModalOpen(false)}
         onSubmit={handleAddClosetItem}
       />
+
+      {/* Modal de Edição de Perfil */}
+      {profile && (
+        <EditProfileModal
+          isOpen={isEditProfileModalOpen}
+          profile={profile}
+          onClose={() => setIsEditProfileModalOpen(false)}
+          onSubmit={handleUpdateProfile}
+        />
+      )}
     </main>
   );
 }
