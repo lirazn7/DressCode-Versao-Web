@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/presentation/contexts/AuthContext";
 import "./globals.css";
+import { AuthProvider } from "@/presentation/contexts/AuthContext";
+import { Navbar } from "@/presentation/components/modules/NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DressCode - Rede Social de Moda",
-  description: "Compartilhe seus melhores looks e descubra tendências",
+  title: "DressCode - Compartilhe seu Estilo",
+  description: "Rede social e closet digital para entusiastas da moda urbana.",
 };
 
 export default function RootLayout({
@@ -24,12 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-[#0f0c1b] text-gray-100 antialiased flex flex-col`}
-        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f0c1b] text-gray-100 min-h-screen flex flex-col`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Navbar />
+          <div className="flex-1">{children}</div>
+        </AuthProvider>
       </body>
     </html>
   );
