@@ -1,85 +1,112 @@
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { db } from "../firebase/config";
-import { Post, CreatePostDTO } from "../../domain/entities/Post";
-import { IPostRepository } from "../../domain/repositories/IPostRepository";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/infrastructure/firebase/config";
+import { IPostRepository } from "@/domain/repositories/IPostRepository";
+import { Post, CreatePostDTO } from "@/domain/entities/Post";
 
 export class FirebasePostRepository implements IPostRepository {
-  private readonly collectionRef = collection(db, "posts");
+  private readonly collectionName = "posts";
 
-  private parseFirestoreDate(rawDate: any): Date {
-    if (!rawDate) return new Date();
-    if (typeof rawDate.toDate === "function") return rawDate.toDate();
-    if (typeof rawDate.seconds === "number") return new Date(rawDate.seconds * 1000);
-    const parsed = new Date(rawDate);
-    return !isNaN(parsed.getTime()) ? parsed : new Date();
-  }
-
-  private parseCount(rawCount: any, fallbackArray?: any[]): number {
-    if (typeof rawCount === "number") return rawCount;
-    if (Array.isArray(fallbackArray)) return fallbackArray.length;
-    if (Array.isArray(rawCount)) return rawCount.length;
+  private parseCount(value: any): number {
+    if (typeof value === "number") return value;
+    if (Array.isArray(value)) return value.length;
     return 0;
   }
 
-  async getFeedPosts(maxLimit: number = 10): Promise<Post[]> {
-    console.log("🔍 [FirebasePostRepository] Buscando posts no Firestore...");
+  async createPost(dto: CreatePostDTO): Promise<Post> {
+    const postData = {
+      userId: dto.userId,
+      authorName: dto.authorName,
+      authorUsername: dto.authorUsername,
+      authorPicture: dto.authorPicture || "",
+      imageUrl: dto.imageUrl,
+      caption: dto.caption,
+      closetItemIds: dto.closetItemIds || [],
+      likesCount: 0,
+      commentsCount: 0,
+      createdAt: Timestamp.now(),
+    };
 
-    try {
-      let snapshot;
-      try {
-        const q = query(this.collectionRef, orderBy("createdAt", "desc"), limit(maxLimit));
-        snapshot = await getDocs(q);
-      } catch (orderError) {
-        console.warn("⚠️ [FirebasePostRepository] Executando fallback sem ordenação...", orderError);
-        const fallbackQuery = query(this.collectionRef, limit(maxLimit));
-        snapshot = await getDocs(fallbackQuery);
-      }
+    const docRef = await addDoc(collection(db, this.collectionName), postData);
 
-      return snapshot.docs.map((doc) => {
-        const data = doc.data();
-
-        // Mapeamento preciso utilizando os dados reais capturados
-        const extractedUsername = 
-          data.username || 
-          data.authorUsername || 
-          data.userName || 
-          "usuario_dresscode";
-
-        // Mapeia o campo 'imageuri' em base64 vindo do aplicativo mobile
-        const extractedImage = 
-          data.imageuri || 
-          data.imageUrl || 
-          data.image || 
-          "";
-
-        // Mapeia 'legenda' e curtidas
-        const extractedDescription = data.legenda || data.description || "";
-        const extractedLikes = this.parseCount(data.likes_count, data.likedBy);
-        const extractedComments = this.parseCount(data.comments_count);
-
-        return {
-          id: doc.id,
-          authorId: data.userid || data.authorId || "",
-          authorUsername: extractedUsername,
-          authorProfilePicture: data.authorProfilePicture || "",
-          imageUrl: extractedImage,
-          description: extractedDescription,
-          likesCount: extractedLikes,
-          commentsCount: extractedComments,
-          createdAt: this.parseFirestoreDate(data.createdAt),
-        } as Post;
-      });
-    } catch (error: any) {
-      console.error("💥 [FirebasePostRepository] Erro no Firestore:", error);
-      throw error;
-    }
+    return {
+      id: docRef.id,
+      userId: dto.userId,
+      authorName: dto.authorName,
+      authorUsername: dto.authorUsername,
+      authorPicture: dto.authorPicture,
+      imageUrl: dto.imageUrl,
+      caption: dto.caption,
+      closetItemIds: dto.closetItemIds || [],
+      likesCount: 0,
+      commentsCount: 0,
+      createdAt: new Date(),
+    };
   }
 
-  async createPost(postData: CreatePostDTO): Promise<Post> {
-    throw new Error("Método não implementado.");
+  async getFeedPosts(): Promise<Post[]> {
+    const q = query(
+      collection(db, this.collectionName),
+      orderBy("createdAt", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+
+      return {
+        id: docSnapshot.id,
+        userId: data.userId || data.authorId || "",
+        authorName: data.authorName || data.authorUsername || "Membro DressCode",
+        authorUsername: data.authorUsername || "usuario",
+        authorPicture: data.authorPicture || data.authorProfilePicture || "",
+        imageUrl: data.imageUrl || "",
+        caption: data.caption || data.description || "",
+        closetItemIds: data.closetItemIds || [],
+        likesCount: this.parseCount(data.likesCount ?? data.likes_count),
+        commentsCount: this.parseCount(data.commentsCount ?? data.comments_count),
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate()
+          : new Date(),
+      };
+    });
   }
 
   async getPostsByUserId(userId: string): Promise<Post[]> {
-    throw new Error("Método não implementado.");
+    const q = query(
+      collection(db, this.collectionName),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+
+      return {
+        id: docSnapshot.id,
+        userId: data.userId || data.authorId || "",
+        authorName: data.authorName || data.authorUsername || "Membro DressCode",
+        authorUsername: data.authorUsername || "usuario",
+        authorPicture: data.authorPicture || data.authorProfilePicture || "",
+        imageUrl: data.imageUrl || "",
+        caption: data.caption || data.description || "",
+        closetItemIds: data.closetItemIds || [],
+        likesCount: this.parseCount(data.likesCount ?? data.likes_count),
+        commentsCount: this.parseCount(data.commentsCount ?? data.comments_count),
+        createdAt: data.createdAt?.toDate
+          ? data.createdAt.toDate()
+          : new Date(),
+      };
+    });
   }
 }
